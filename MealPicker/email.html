@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body>
+    <p>Good morning ____! :)</p>
+    <p>Here is your meal plan for the day:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Meal Time</th>
+          <th>Recipe Name</th>
+          <th>Recipe Link</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Breakfast</td>
+          <td><?= breakfastName ?></td>
+          <td><?= breakfastLink ?></td>
+        </tr>
+        <tr>
+          <td>Lunch</td>
+          <td><?= lunchName ?></td>
+          <td><?= lunchLink ?></td>
+        </tr>
+        <tr>
+          <td>Dinner</td>
+          <td><?= dinnerName ?></td>
+          <td><?= dinnerLink ?></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>These meals were randomly selected from our <a href="https://docs.google.com/spreadsheets/d/...">recipe database</a>.</p>
+    <p>You can submit new recipes via <a href="https://docs.google.com/forms/d/e/.../viewform">this form</a>.<p>
+  </body>
+</html>
