@@ -1,0 +1,82 @@
+<script>
+  // SCRIPT THAT READS A GOOGLE SHEET, PARSES IT (INCLUDING DATES) WITH PANDAS IN PYODIDE, AND DISPLAYS IT AS HTML
+
+  function main(start) {
+    const runBtn = document.querySelector(".runBtn");
+    const output = document.querySelector(".output");
+    var startTime, endTime;
+
+    function startLoggingTime() {
+      startTime = new Date();
+    };
+
+    function endLoggingTime() {
+      endTime = new Date();
+      var timeDiff = endTime - startTime; //in ms
+      output.innerHTML += `</br>${timeDiff} ms elapsed.`;
+    };
+
+    // init pyodide
+    async function init_pyodide() {
+      let pyodide = await loadPyodide();
+      output.innerHTML = "Ready!";
+      runBtn.style.visibility = "visible";
+      //endLoggingTime();
+      return pyodide;
+    };
+
+    //startLoggingTime();
+    let pyodideReadyPromise = init_pyodide();
+
+    async function parseServerOutput(serverOut) {
+      //endLoggingTime();
+      output.innerHTML = "Loading Pandas...";
+      //startLoggingTime();
+      let pyodide = await loadPyodide();
+      await pyodide.loadPackage("pandas");
+      //endLoggingTime();
+
+      let s = await pyodide.runPython(`
+        import pandas as pd
+        from datetime import datetime, timezone
+        from pytz import timezone
+        
+        data = ${serverOut}
+        columns = [column.pop(0) for column in data]
+
+        datadict = {col: col_data for col, col_data in zip(columns, data)}
+
+        df = pd.DataFrame(datadict)
+        df["Date"] = df["Date"].apply(lambda ms: datetime.fromtimestamp(ms / 1000.0, tz=timezone('America/New_York')))
+        df.to_html()
+      `);
+
+      output.innerHTML = s;
+      return serverOut;
+    };
+
+    async function onParseFailure(error) {
+      output.innerHTML = "<h1>Unable to process the data. You might not have access to the Google Sheet used for this app.</h1>";
+    }
+
+    async function pyReadGSheet() {
+      output.innerHTML = "Reading Google Sheet...";
+      //startLoggingTime();
+      google.script.run
+        .withFailureHandler(onParseFailure)
+        .withSuccessHandler(parseServerOutput)
+        .readSheets();
+      return true;
+    };
+
+    async function changeOutput(event) {
+      output.innerHTML = "Processing Python code...";
+      let pyodide = await loadPyodide();
+      let loaded = await pyReadGSheet();
+      //endLoggingTime();
+    };
+
+    runBtn.addEventListener("click", changeOutput);
+  };
+  google.script.run.withSuccessHandler(main).start();
+</script>
