@@ -1,0 +1,317 @@
+<style>
+
+/* OVERALL PAGE */
+html, body {
+  font-family: 'docs-Roboto';
+}
+
+.container {
+  width:100%;
+  background-color:#141a1c; color:#ffffff;
+  display:inline-block; border-radius:10px;
+}
+.subcontainer {
+  width:100%; height:98%;
+  background-color:#384850;
+  border-radius:6px;
+}
+
+
+.subcontainer .form-toggle {
+  display: flex;
+  flex-direction: row!important;
+  text-align:center; padding:10px; justify-content:center;
+}
+.btn-form-toggle {
+  width: 50%;
+  text-align: center;
+  justify-content: center;
+  border: 4px solid orange;
+  border-radius: 1.5rem;
+  background: orange;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 400;
+  font-style: bold!important;
+  cursor: pointer;
+  font-family: 'Lato'!important;
+}
+.btn-form-toggle .span {
+  height: 100%; 
+}
+.btn-form-toggle:hover {
+  background: var(--bg-color);
+  border: 4px solid #f0f0f0;
+  box-shadow: 0 3px hsla(0.75, 0.82, 0.165, 1);
+  transition: 0.4s cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+.btn-form-toggle:focus {
+  outline: none;
+}
+
+
+/* RESPONSIVE */
+@media (min-width: 600px) {
+  .container {
+    display:flex;
+    height:100vh;
+  }
+  .subcontainer {
+    height:98%;
+    margin:7px 7px;
+  }
+  .subcontainer-calendar {
+    width:70%;
+  }
+  .subcontainer-form {
+    width:30%;
+    display: flex;
+    flex:1;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .form-content .iframe {
+    overflow: visible;
+    height: 100%;
+  }
+  .subcontainer .form-toggle {
+    height:6%;
+  }
+  .subcontainer-form .form-content {
+    height:94%;
+  }
+}
+@media (max-width: 600px) {
+  .container {  
+    background-color:#384850;
+    height: 100%;
+  }
+  .subcontainer {
+    margin-top: 30px;
+    height: 65vh;
+  }
+  .subcontainer-calendar {
+    height: 100%!important;
+  }
+  .subcontainer .form-toggle {
+    height:9%;
+  }
+  .subcontainer-form .form-content {
+    height:91%;
+  }
+  .form-content .iframe {
+    overflow: visible;
+    height: 100%;
+  }
+}
+
+
+
+
+/* CALENDAR OVERRIDES */
+.fc-view-harness {
+  height: 70vh!important;
+}
+.fc-toolbar-title {
+  padding:10px!important;
+}
+.fc-day:hover {
+  opacity: 0.7;
+  background: var(--bg-color);
+  box-shadow: 0 3px hsla(0.75, 0.82, 0.165, 1);
+  transition: 0.4s cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+
+
+
+
+
+/* TOGGLES FOR FILTER OPTIONS */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 17px;
+}
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 13px;
+  width: 13px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+input:checked + .slider {
+  background-color: #2196F3;
+}
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+input:checked + .slider:before {
+  -webkit-transform: translateX(13px);
+  -ms-transform: translateX(13px);
+  transform: translateX(13px);
+}
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+.slider.round:before {
+  border-radius: 50%;
+}
+.toggle-list-container {
+  display:flex;
+  flex-direction:column!important;
+}
+#toggle-list {
+  display:flex;
+  flex-direction:row!important;
+  flex-wrap:wrap;
+
+}
+#toggle-list>* {
+  flex: 1 1 65px;
+}
+.toggle {
+  display:flex;
+  flex-direction:column!important;
+  flex-wrap:wrap;
+}
+.toggle-label {
+  font-size:0.7em;
+}
+
+
+
+
+
+/* CALENDAR FUNCTIONALITY */
+.modal-day-people {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1000; /* Sit on top */
+  top: 0%;
+  left: 0;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: hsl(249, 32%, 17%);
+  opacity: 0.9;
+}
+/* .modal-day-people.active {
+  top: 0;
+  transition: 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
+} */
+.modal-day-people-content {
+  background-color: hsl(249, 32%, 17%);
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 30%;
+}
+.modal-day-people-text {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 400;
+  margin-top: 2rem;
+}
+.btn-modal-close {
+  display: flex;
+  justify-content: center;
+  margin: 1.2rem auto 0 auto;
+  padding: 10px 18px;
+  width: 40%;
+  text-align: center;
+  border: 4px solid orange;
+  border-radius: 1.5rem;
+  background: orange;
+  color: white;
+  font-size: 1rem;
+  font-style: bold;
+  font-weight: 400;
+  cursor: pointer;
+}
+.btn-modal-close:hover,
+.btn-modal-close:focus {
+  background: var(--bg-color);
+  border: 4px solid #f0f0f0;
+  box-shadow: 0 3px hsla(0.75, 0.82, 0.165, 1);
+  transition: 0.4s cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+
+
+
+/* Tooltip container */
+.tooltip-container {
+  position: absolute; left: 5px;
+  text-align: left!important; vertical-align: bottom!important;
+  /* width: 100%; height: 100%; */
+  font-size: 22px; font-weight:bold;
+  display: flex;
+  cursor: pointer;
+}
+
+/* Tooltip text */
+.tooltip-container .tooltiptext {
+  visibility: hidden;
+  /* max-width: 220px; */
+  font-size: 18px!important;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 500;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* Tooltip arrow */
+.tooltip-container .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip-container:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+</style>

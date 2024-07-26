@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rangeley Scheduler</title>
+    <style src="https://fonts.googleapis.com/css?family=Lato"></style>
+    <?!= HtmlService.createHtmlOutputFromFile("style").getContent(); ?>
+  </head>
+  <body>
+    <div class="container">
+      <div class="subcontainer subcontainer-form">
+        <div class="form-toggle">
+          <button type="button" class="btn-form-toggle" onclick="showFilter()"><span>Filter Options</span></button>
+        </div>
+        <div class="form-content">
+          <iframe id="schedule-form" src="https://docs.google.com/forms/d/e/.../viewform?embedded=true" width="100%" height="100%" frameborder="0">Loading form…</iframe>
+        </div>
+      </div>
+      <div class="subcontainer subcontainer-calendar">
+        <div id="calendar-container">
+          <?!= HtmlService.createTemplateFromFile("calendar").evaluate().getContent(); ?>
+        </div>
+        <h3 style="text-align:center;">Don't like the color scheme? Make specific suggestions from <a href="https://xkcd.com/color/rgb/">this list!</a></h3>
+        <h5 style="text-align:center;"><u>Click the number</u> in the top left corner of each date to see who will be in ... then.</h5>
+      </div>
+      <div class="modal-day-people">
+          <!-- Content -->
+          <div class="modal-day-people-content">
+            <!-- message -->
+            <p class="modal-day-people-text"></p>
+            <!-- close button -->
+            <button type="button" class="btn-modal-close">Close</button>
+          </div>
+        </div>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var toggleButton = document.getElementsByClassName("btn-form-toggle")[0];
+        var formContentEl = document.getElementsByClassName("form-content")[0];
+
+        toggleButton.onclick = function() {
+          showFilter();
+        };
+
+        function showFilter() {
+          toggleButton.innerHTML = "Show Form";
+          toggleButton.onclick = function() {
+            showForm();
+          };
+          formContentEl.innerHTML = `
+            <div class="toggle-list-container">
+              <div id="toggle-list" style="padding:5px;"></div>
+            </div>
+          `;
+          var toggleListEl = document.getElementById('toggle-list');
+
+          function createToggles() {
+            function onSuccess(serverOutput) {
+              // list all scheduled people in a tooltip over each date cell
+              var people = JSON.parse(serverOutput);
+              for (let person of people) {
+                let newToggle = document.createElement("a");
+                newToggle.className = "toggle";
+                newToggle.innerHTML = `
+                  <label class="switch">
+                    <input type="checkbox" class="toggle-checkbox" checked>
+                    <span class="slider round"></span>
+                  </label>
+                  <span class="toggle-label">${person}</span>
+                  </br></br>
+                `;
+                newToggle.addEventListener("click", function() {
+                  document.getElementById("btn-refresh").click();
+                });
+                toggleListEl.appendChild(newToggle);
+              }
+              // create deselect all button
+              var deselectToggle = document.createElement("a");
+              deselectToggle.className = "toggle";
+              deselectToggle.id = "toggle-deselect";
+              deselectToggle.innerHTML = `
+                <label class="switch">
+                  <input type="checkbox" class="toggle-checkbox">
+                  <span class="slider round"></span>
+                </label>
+                <span class="toggle-label">Deselect All</span>
+                </br></br>
+              `;
+              // make the deselect toggle turn off everything when turned on or vice versa
+              deselectToggle.addEventListener("click", function() {
+                for (let toggle of document.getElementsByClassName("toggle")) {
+                  if (toggle.id !== "toggle-deselect") {
+                    let checkbox = toggle.getElementsByClassName("toggle-checkbox")[0];
+                    if (this.getElementsByClassName("toggle-checkbox")[0].checked) {
+                      checkbox.checked = false;
+                    } else {
+                      checkbox.checked = true;
+                    }
+                  }
+                }
+                document.getElementById("btn-refresh").click();
+              });
+              toggleListEl.appendChild(deselectToggle);
+              for (toggle of document.getElementsByClassName("toggle")) {
+                if (toggle.id !== "toggle-deselect") {
+                  toggle.addEventListener("click", function() {
+                    let deselectCheckbox = document.getElementById("toggle-deselect").getElementsByClassName("toggle-checkbox")[0];
+                    if (deselectCheckbox.checked) {
+                      deselectCheckbox.checked = false;
+                    }
+                  });
+                }
+              }
+            }
+            google.script.run.withSuccessHandler(onSuccess).getPeople();
+          };
+          createToggles();
+        };
+
+        function showForm() {
+          toggleButton.innerHTML = "Filter Options";
+          toggleButton.onclick = function() {
+            showFilter();
+          };
+          formContentEl.innerHTML = `<iframe id="schedule-form" src="https://docs.google.com/forms/d/e/.../viewform?embedded=true" width="100%" height="100%" frameborder="0">Loading form…</iframe>`;
+        };
+      });
+    </script>
+  </body>
+</html>

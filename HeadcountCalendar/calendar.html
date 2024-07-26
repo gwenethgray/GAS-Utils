@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/google-calendar@6.1.10/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.30.1/moment.min.js"></script>
+    <script>
+
+      function reloadCalendar() {
+        // set up calendar
+
+        var calendarEl = document.getElementById('calendar');
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+          googleCalendarApiKey: '...',
+          events: {
+            googleCalendarId: '...@group.calendar.google.com'
+          },
+          eventColor: '#9fdefc',
+          eventTextColor: 'white',
+          selectable: true, unselectAuto: true
+        });
+
+        // set up the modal display of people on each day
+
+        var modalDayPeople = document.querySelector(".modal-day-people");
+        var modalClose = document.querySelector(".btn-modal-close");
+        // close the display
+        modalClose.onclick = () => {
+          modalDayPeople.style.display = "none";
+        };
+
+        calendar.render();
+        
+
+        // get schedule data from server
+
+        function getScheduleData() {
+          function onSuccess(serverOutput) {
+            // list all scheduled people in a tooltip over each date cell
+            var peopleByDate = JSON.parse(serverOutput);
+            var dates = Object.keys(peopleByDate);
+            let includedNames = new Array();
+
+            // check if toggle list is available
+            try {
+              var toggleListEl = document.getElementById('toggle-list');
+              // if deselect toggle is checked, skip populating
+              let deselectToggle = document.getElementById("toggle-deselect");
+              if (!deselectToggle.getElementsByClassName("toggle-checkbox")[0].checked) {
+                // add any checked names to included names list
+                var toggles = toggleListEl.getElementsByClassName("toggle");
+                for (let toggle of toggles) {
+                  if (toggle.getElementsByClassName("toggle-checkbox")[0].checked) {
+                    includedNames.push(toggle.getElementsByClassName("toggle-label")[0].textContent);
+                  }
+                }
+                console.log("Counting people on dates when the following people are present: " + includedNames);
+              } else {
+                // deselect toggle is checked; push "none" to includedNames
+                includedNames.push("none");
+              }
+            } catch (error) {
+              console.log("Could not access the people toggle list; displaying all names on calendar.");
+            };
+
+            var dateCells = calendarEl.getElementsByClassName("fc-daygrid-day");
+            for (let cell of dateCells) {
+              if (dates.includes(cell.dataset.date)) {
+                let people = new Array();
+                console.log("List of included names: " + includedNames);
+                // check if any included names are present on this date
+                if (!includedNames.includes("none")) {
+                  for (let name of peopleByDate[cell.dataset.date]) {
+                    if (includedNames.includes(name) || includedNames.length === 0) {
+                      console.log("Found included name on " + cell.dataset.date + ": " + name);
+                      people = peopleByDate[cell.dataset.date];
+                      break;
+                    }
+                  }
+                }
+                console.log("Including the following people on " + cell.dataset.date + ": " + people);
+
+                let numPeople = people.length;
+                console.log("Number of people: " + numPeople);
+
+                // if no names listed, do nothing; else add formatting
+                if (numPeople === 0) {
+                  cell.style.backgroundColor = "#384850";
+                  let cellTop = cell.getElementsByClassName("fc-daygrid-day-top")[0];
+                  let cellTopTooltip = cellTop.getElementsByClassName("tooltip")[0];
+                  if (cellTopTooltip) {
+                    cellTopTooltip.remove();
+                  }
+                } else if (numPeople > 0) {
+                  if (numPeople < 7) {
+                    cell.style.backgroundColor = "#11875d";
+                  } else if (numPeople < 11) {
+                    cell.style.backgroundColor = "#61e160";
+                  } else if (numPeople < 15) {
+                    cell.style.backgroundColor = "#fdaa48";
+                  } else {
+                    cell.style.backgroundColor = "#fe0002";
+                  }
+
+                  // add tooltip to cell
+                  let cellTop = cell.getElementsByClassName("fc-daygrid-day-top")[0];
+                  let cellDayNumber = cellTop.getElementsByClassName("fc-daygrid-day-number")[0];
+                  cellTop.innerHTML =
+                        `<div class="tooltip-container">
+                          <a class="tooltip">${numPeople}</a>
+                          <span class="tooltiptext">${people.sort().join(", ")}</span>
+                        </div>`; // &#13;&#10; for linebreak if needed in join
+                  cellTop.appendChild(cellDayNumber);
+                  let cellTopTooltip = cellTop.getElementsByClassName("tooltip")[0];
+                  cellTop.getElementsByClassName("tooltip")[0].addEventListener("mouseenter", function() {
+                    cellTopTooltip.style.textShadow = "0 0 20px #f8fa75, 0 0 20px #f8fa75, 0 0 20px #f8fa75, 0 0 20px #f8fa75";
+                  });
+                  cellTop.getElementsByClassName("tooltip")[0].addEventListener("mouseleave", function() {
+                    cellTopTooltip.style.textShadow = "";
+                  });
+
+                  let [year, month, day] = cell.dataset.date.split("-")
+                  let fmtDate = [month, day, year].join("-");
+                  // display the people scheduled on this day
+                  cell.addEventListener("click", function () {
+                    modalDayPeople.style.display = "block";
+                    modalDayPeople.getElementsByClassName("modal-day-people-text")[0].innerHTML = `People in ... on ${moment(cell.dataset.date).format("dddd MMM Do YYYY")}:<br><br>${people.sort().join(", ")}<br><br>`;
+                  });
+
+                }
+              }
+            }
+            // add refresh button
+            var middleToolbarChunk = document.getElementsByClassName("fc-toolbar-chunk")[1];
+            middleToolbarChunk.innerHTML = `
+              <button type="button" title="refresh" aria-pressed="false" class="fc-button fc-button-primary" id="btn-refresh">refresh</button>
+            `;
+            var refreshButton = document.getElementById("btn-refresh");
+            refreshButton.addEventListener("click", getScheduleData);
+          }
+          google.script.run.withSuccessHandler(onSuccess).readSheet();
+        }
+
+        /* function positionTooltip() {
+          var txt = this.getElementsByClassName("tooltiptext")[0];
+          // console.log(getComputedStyle(txt));
+          var tooltipText = this.parentNode.querySelector(".tooltiptext");
+          var boundingRect = this.getBoundingClientRect();
+          // corrections
+          if (tooltipText.x < boundingRect.x) {
+            // going off screen left
+            // tooltipText.x = boundingRect.x + 5 + 'px!important';
+            tooltipText.marginLeft = 5;
+            console.log("going off screen left");
+          }
+          if ((tooltipText.x + tooltipText.width) > (boundingRect.x + boundingRect.width)) {
+            // going off screen right
+            tooltipText.x = -tooltipText.width -5 + 'px!important';
+            console.log("going off screen right");
+          }
+          if (tooltipText.y < boundingRect.y) {
+            // going off screen up
+            tooltipText.y = boundingRect.y + 5 + 'px!important';
+            console.log("going off screen up");
+          }
+        } */
+
+        // make the previous and next month buttons reload the schedule formatting
+        for (let button of calendarEl.getElementsByClassName("fc-button")) {
+          button.addEventListener("click", reloadCalendar);
+        }
+
+        getScheduleData();
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        reloadCalendar();
+      });
+
+    </script>
+  </head>
+  <body>
+    <div id='calendar'></div>
+  </body>
+</html>
